@@ -30,6 +30,15 @@ claude --version
 codex --version
 ```
 
+## Choose the Claude executable
+
+The server runs `claude` from `PATH` by default. Set `CLAUDE_CODE_MCP_CLAUDE_BIN` to the absolute path of an executable to override it for tasks, reviews, and `claude_status` checks:
+
+- Codex: add `--env CLAUDE_CODE_MCP_CLAUDE_BIN=/absolute/path/to/claude` to `codex mcp add`.
+- JSON-based clients: add `"CLAUDE_CODE_MCP_CLAUDE_BIN": "/absolute/path/to/claude"` to the server's `env`.
+
+On Windows, use the native `claude.exe` (the target of the npm `claude.cmd` shim, typically `...\node_modules\@anthropic-ai\claude-code\bin\claude.exe`). The server spawns processes without a shell, so point this variable at the `.exe` itself; a `.cmd` shim cannot be executed in this mode. For example: `--env "CLAUDE_CODE_MCP_CLAUDE_BIN=C:\path\to\node_modules\@anthropic-ai\claude-code\bin\claude.exe"`.
+
 ## Install in Codex
 
 Clone the repository, or use your existing clone:

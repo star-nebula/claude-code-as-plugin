@@ -11,6 +11,7 @@ const DEFAULT_TIMEOUT_MS = 30 * 60 * 1000;
 const MAX_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 const KILL_GRACE_MS = 5_000;
 const CLI_STATUS_TTL_MS = 5_000;
+const CLAUDE_BIN = process.env.CLAUDE_CODE_MCP_CLAUDE_BIN || "claude";
 const PERMISSION_MODES = new Set(["acceptEdits", "auto", "bypassPermissions", "manual", "dontAsk", "plan"]);
 const EFFORT_LEVELS = new Set(["low", "medium", "high", "xhigh", "max"]);
 const reviewAfterRun = parseBoolean(process.env.CLAUDE_CODE_MCP_REVIEW_AFTER_RUN);
@@ -142,7 +143,7 @@ async function getStatus(jobId) {
 async function getCliStatus() {
   if (cliStatusCache && Date.now() - cliStatusCache.checkedAt < CLI_STATUS_TTL_MS) return cliStatusCache.value;
   try {
-    const cli = await execute("claude", ["--version"], { cwd: process.cwd(), timeoutMs: 10_000 }).promise;
+    const cli = await execute(CLAUDE_BIN, ["--version"], { cwd: process.cwd(), timeoutMs: 10_000 }).promise;
     cliStatusCache = { checkedAt: Date.now(), value: { available: cli.exitCode === 0, version: cli.stdout.trim() || null, error: cli.stderr.trim() || null } };
   } catch (error) {
     cliStatusCache = { checkedAt: Date.now(), value: { available: false, version: null, error: error.message || String(error) } };
@@ -156,8 +157,9 @@ async function executeClaude({ prompt, cwd, model, effort, permissionMode, allow
   if (effort) args.push("--effort", effort);
   if (allowedTools?.length) args.push("--allowedTools", allowedTools.join(","));
   if (maxBudgetUsd !== undefined) args.push("--max-budget-usd", String(maxBudgetUsd));
-  args.push(prompt);
-  const process = execute("claude", args, { cwd, timeoutMs: boundedTimeout(timeoutMs) });
+  // Terminate option parsing so variadic flags such as --allowedTools cannot consume the prompt.
+  args.push("--", prompt);
+  const process = execute(CLAUDE_BIN, args, { cwd, timeoutMs: boundedTimeout(timeoutMs) });
   onProcess?.(process);
   const result = await process.promise;
   return { exitCode: result.exitCode, result: parseJsonOrText(result.stdout), stderr: result.stderr.trim() || undefined };

@@ -34,7 +34,7 @@ if (args.at(-1) === "wait") setTimeout(output, 500); else if (args.at(-1) === "f
   const withoutModel = JSON.parse(await client.call("claude_run", { prompt: "first task", cwd: process.cwd() }));
   assert.equal(withoutModel.task.result.args.includes("--model"), false);
   const withModel = JSON.parse(await client.call("claude_run", { prompt: "second task", model: "sonnet", effort: "high", cwd: process.cwd() }));
-  assert.deepEqual(withModel.task.result.args.slice(-5), ["--model", "sonnet", "--effort", "high", "second task"]);
+  assert.deepEqual(withModel.task.result.args.slice(-6), ["--model", "sonnet", "--effort", "high", "--", "second task"]);
   const review = JSON.parse(await client.call("claude_review", { model: "opus", effort: "max", cwd: process.cwd() }));
   assert.equal(review.review.result.args[review.review.result.args.indexOf("--model") + 1], "opus");
   assert.equal(review.review.result.args[review.review.result.args.indexOf("--effort") + 1], "max");
